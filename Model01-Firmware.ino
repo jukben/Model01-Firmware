@@ -2,9 +2,7 @@
 // Copyright 2016 Keyboardio, inc. <jesse@keyboard.io>
 // See "LICENSE" for license details
 
-#ifndef BUILD_INFORMATION
-#define BUILD_INFORMATION "locally built by jukben"
-#endif
+#define BUILD_TIMESTAMP __DATE__ ", " __TIME__
 
 /**
  * These #include directives pull in the Kaleidoscope firmware core,
@@ -178,8 +176,8 @@ static void versionInfoMacro(uint8_t keyState)
 {
   if (keyToggledOn(keyState))
   {
-    Macros.type(PSTR("Running custom firmware of Keyboardio Model 01 - Kaleidoscope built by jukben"));
-    Macros.type(PSTR(BUILD_INFORMATION));
+    Macros.type(PSTR("Running custom firmware of Keyboardio Model 01 - Kaleidoscope built by jukben at "));
+    Macros.type(PSTR(BUILD_TIMESTAMP));
   }
 }
 
