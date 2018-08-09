@@ -21,9 +21,6 @@
 // Support for controlling the keyboard's LEDs
 #include "Kaleidoscope-LEDControl.h"
 
-// Support for "Numpad" mode, which is mostly just the Numpad specific LED mode
-#include "Kaleidoscope-NumPad.h"
-
 // Support for an "LED off mode"
 #include "LED-Off.h"
 
@@ -46,17 +43,11 @@
 // Support for USB quirks, like changing the key state report protocol
 #include "Kaleidoscope-USB-Quirks.h"
 
-// Support Serial Comunication
+// Important for LED Custom Palette
 #include "Kaleidoscope-Focus.h"
-
-// Support EEPROM-Settings (requirement for LED Palette Theme)
 #include "Kaleidoscope-EEPROM-Settings.h"
-
-// Support LED Palette Theme (requirement for LEDCustomPallette)
 #include "Kaleidoscope-LED-Palette-Theme.h"
-
-// Support custom keyboard via LED Custom Palette
-#include "Kaleidoscope-LEDCustomPalette.h"
+#include "Kaleidoscope-Colormap.h"
 
 /** This 'enum' is a list of all the macros used by the Model 01's firmware
   * The names aren't particularly important. What is important is that each
@@ -123,8 +114,8 @@ enum
 enum
 {
   PRIMARY,
-  NUMPAD,
-  FUNCTION
+  FUNCTION,
+  numberOfLayers,
 }; // layers
 
 KEYMAPS(
@@ -135,26 +126,12 @@ KEYMAPS(
                                Key_LeftControl, Key_Backspace, Key_LeftGui, Key_LeftShift,
                                ShiftToLayer(FUNCTION),
 
-                               M(MACRO_ANY), Key_6, Key_7, Key_8, Key_9, Key_0, LockLayer(NUMPAD),
+                               M(MACRO_ANY), Key_6, Key_7, Key_8, Key_9, Key_0, ___,
                                Key_Enter, Key_Y, Key_U, Key_I, Key_O, Key_P, Key_Equals,
                                Key_H, Key_J, Key_K, Key_L, Key_Semicolon, Key_Quote,
                                M(ALFRED), Key_N, Key_M, Key_Comma, Key_Period, Key_Slash, Key_Minus,
                                Key_RightShift, Key_LeftAlt, Key_Spacebar, Key_RightControl,
                                ShiftToLayer(FUNCTION)),
-
-    [NUMPAD] = KEYMAP_STACKED(___, ___, ___, ___, ___, ___, ___,
-                              ___, ___, ___, ___, ___, ___, ___,
-                              ___, ___, ___, ___, ___, ___,
-                              ___, ___, ___, ___, ___, ___, ___,
-                              ___, ___, ___, ___,
-                              ___,
-
-                              M(MACRO_VERSION_INFO), ___, Key_Keypad7, Key_Keypad8, Key_Keypad9, Key_KeypadSubtract, ___,
-                              ___, ___, Key_Keypad4, Key_Keypad5, Key_Keypad6, Key_KeypadAdd, ___,
-                              ___, Key_Keypad1, Key_Keypad2, Key_Keypad3, Key_Equals, ___,
-                              ___, ___, Key_Keypad0, Key_KeypadDot, Key_KeypadMultiply, Key_KeypadDivide, Key_Enter,
-                              ___, ___, ___, ___,
-                              ___),
 
     [FUNCTION] = KEYMAP_STACKED(___, Key_F1, Key_F2, Key_F3, Key_F4, Key_F5, Key_CapsLock,
                                 Key_Tab, ___, Key_mouseUp, ___, Key_mouseBtnR, Key_mouseWarpEnd, Key_mouseWarpNE,
@@ -313,10 +290,6 @@ KALEIDOSCOPE_INIT_PLUGINS(
     // and slowly moves the rainbow across your keyboard
     LEDRainbowWaveEffect,
 
-    // The numpad plugin is responsible for lighting up the 'numpad' mode
-    // with a custom LED effect
-    NumPad,
-
     // The macros plugin adds support for macros
     Macros,
 
@@ -332,13 +305,11 @@ KALEIDOSCOPE_INIT_PLUGINS(
     // same time.
     MagicCombo,
 
+    // Important for LED Custom Palette
     Focus,
-
     EEPROMSettings,
-
     LEDPaletteTheme,
-
-    LEDCustomPalette,
+    ColormapEffect,
 
     // The USBQuirks plugin lets you do some things with USB that we aren't
     // comfortable - or able - to do automatically, but can be useful
@@ -355,10 +326,6 @@ void setup()
   // First, call Kaleidoscope's internal setup function
   Kaleidoscope.setup();
 
-  // While we hope to improve this in the future, the NumPad plugin
-  // needs to be explicitly told which keymap layer is your numpad layer
-  NumPad.numPadLayer = NUMPAD;
-
   // Make mouse mode great again
   MouseKeys.speed = 10;
   MouseKeys.accelSpeed = 2;
@@ -374,11 +341,19 @@ void setup()
   // with USB devices
   LEDOff.activate();
 
+  // Important for LED Custom Palette, how many paletts we should reserve
+  ColormapEffect.max_layers(numberOfLayers);
+
+  // Let the keyboard know we're done with adding EEPROM plugins
+  EEPROMSettings.seal();
+
   Focus.addHook(FOCUS_HOOK_HELP);
   Focus.addHook(FOCUS_HOOK_VERSION);
-  Focus.addHook(FOCUS_HOOK_LEDCONTROL);
+
+  // Important for LED Custom Palette
   Focus.addHook(FOCUS_HOOK_LEDPALETTETHEME);
-  Focus.addHook(FOCUS_HOOK_LCP);
+  Focus.addHook(FOCUS_HOOK_COLORMAP);
+  Focus.addHook(FOCUS_HOOK_COLORMAP_LAYER);
 }
 
 /** loop is the second of the standard Arduino sketch functions.
